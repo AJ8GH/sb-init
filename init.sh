@@ -44,9 +44,53 @@ curl \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer $token"\
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/user/repos \
+  "https://api.github.com/user/repos" \
   -d "{\"name\":\"$name\"}"
 
 git push -u origin main
+git checkout -b dev
+git push -u origin dev
+
+# Protect main branch
+curl -L \
+  -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer $token"\
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  "https://api.github.com/repos/aj8gh/$name/branches/main/protection" \
+  -d '{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      {
+        "context": "build"
+      }
+    ]
+  },
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "required_linear_history": true,
+  "allow_force_pushes": true,
+  "enforce_admins": true
+}'
+
+# Protect dev branch
+curl -L \
+  -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer $token"\
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  "https://api.github.com/repos/aj8gh/$name/branches/dev/protection" \
+  -d '{
+  "required_status_checks": {
+    "strict": false,
+    "checks": null
+  },
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "required_linear_history": false,
+  "allow_force_pushes": true,
+  "enforce_admins": false
+}'
 
 idea "$project_dir"
